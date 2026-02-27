@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>REST CRUD Messaggi</title>
+</head>
+<body>
+
+<h2>Messaggi (REST CRUD)</h2>
+
+<input id="testo" placeholder="Scrivi un messaggio">
+<button onclick="crea()">Crea</button>
+
+<p>
+  <input id="idDett" placeholder="ID per dettaglio / update / delete" style="width:260px">
+  <button onclick="dettaglio()">Dettaglio</button>
+  <button onclick="aggiorna()">Aggiorna</button>
+  <button onclick="elimina()">Elimina</button>
+</p>
+
+<h3>Lista</h3>
+<ul id="lista"></ul>
+
+<h3>Risposta</h3>
+<pre id="out"></pre>
+
+<script>
+const base = "api.php/messaggi";
+
+function stampa(obj) {
+  document.getElementById("out").textContent = JSON.stringify(obj, null, 2);
+}
+
+function caricaLista() {
+  fetch(base)
+    .then(r => r.json())
+    .then(dati => {
+      document.getElementById("lista").innerHTML =
+        dati.map(m => `<li>${m.id}: ${m.testo}</li>`).join("");
+      stampa(dati);
+    });
+}
+
+function crea() {
+  const testo = document.getElementById("testo").value.trim();
+  if (!testo) return;
+
+  fetch(base, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({testo})
+  })
+  .then(r => r.json())
+  .then(obj => {
+    document.getElementById("testo").value = "";
+    stampa(obj);
+    caricaLista();
+  });
+}
+
+function dettaglio() {
+  const id = document.getElementById("idDett").value.trim();
+  if (!id) return;
+
+  fetch(`${base}/${id}`)
+    .then(r => r.json())
+    .then(obj => stampa(obj));
+}
+
+function aggiorna() {
+  const id = document.getElementById("idDett").value.trim();
+  const testo = document.getElementById("testo").value.trim();
+  if (!id || !testo) return;
+
+  fetch(`${base}/${id}`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({testo})
+  })
+  .then(r => r.json())
+  .then(obj => {
+    stampa(obj);
+    caricaLista();
+  });
+}
+
+function elimina() {
+  const id = document.getElementById("idDett").value.trim();
+  if (!id) return;
+
+  fetch(`${base}/${id}`, { method: "DELETE" })
+    .then(r => r.json())
+    .then(obj => {
+      stampa(obj);
+      caricaLista();
+    });
+}
+
+caricaLista();
+</script>
+
+</body>
+</html>
